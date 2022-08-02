@@ -1,4 +1,3 @@
-import { parse } from 'yargs';
 import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
@@ -8,6 +7,8 @@ import {
   writeNewConfigFile,
 } from './externalConfigFileHandler';
 
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { parse } = require('yargs');
 interface Args {
   maxSize: string;
   buildDir: string;

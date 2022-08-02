@@ -1,10 +1,12 @@
 import path from 'path';
 import fs from 'fs';
-import bytes from 'bytes';
-// eslint-disable-next-line import/no-internal-modules
-import compressedSize from 'bundlesize/src/compressed-size';
 
 import { BundleSizeConfig } from './check';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const bytes = require('bytes');
+// eslint-disable-next-line @typescript-eslint/no-var-requires, import/no-internal-modules
+const compressedSize = require('bundlesize/src/compressed-size');
 
 export const writeNewConfigFile = (
   oldConfig: BundleSizeConfig,
