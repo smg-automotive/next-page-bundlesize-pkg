@@ -1,7 +1,7 @@
 {
-  "name": "@smg-automotive/example",
+  "name": "@smg-automotive/next-page-bundlesize",
   "version": "0.0.0-development",
-  "description": "A boilerplate package setup",
+  "description": "Page-level bundle size limits for next.js",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
@@ -24,9 +24,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/smg-automotive/fe-example-pkg.git"
+    "url": "https://github.com/smg-automotive/next-page-bundlesize-pkg.git"
   },
-  "homepage": "https://github.com/smg-automotive/fe-example-pkg#readme",
+  "homepage": "https://github.com/smg-automotive/next-page-bundlesize-pkg#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "22.0.1",
     "@rollup/plugin-node-resolve": "13.3.0",
