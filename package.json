@@ -11,6 +11,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "bin": {
+    "next-page-bundlesize": "./pkg/index.js"
+  },
   "scripts": {
     "version": "npm run build",
     "build": "rimraf dist && rollup -c",
