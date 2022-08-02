@@ -7,5 +7,6 @@ export default {
   restoreMocks: true,
   roots: ['<rootDir>/src'],
   setupFilesAfterEnv: ['<rootDir>/.jest/setup/jestDomExpects.ts'],
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
+  testRegex: '(/__tests__/.*|(\\.|/)test)\\.tsx?$',
 };

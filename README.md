@@ -6,17 +6,17 @@ If you're interested in automated dependency updates make sure that `renovate` h
 - [x] replace `example-pkg` with the name of your package in this `README`
 - [x] update the `@smg-automotive/example` with the name of your package in `package.json`
 - [x] update `repository` and `homepage` sections in `package.json` to point to your GitHub repository
-- [ ] ensure that branch protection rules are applied to the `main` branch (Settings > Branches)
+- [x] ensure that branch protection rules are applied to the `main` branch (Settings > Branches)
   - [x] Require a pull request before merging
   - [x] Require approvals
-  - [ ] Require status checks to pass before merging (project needs to be built in circle for the checks to show up)
+  - [x] Require status checks to pass before merging (project needs to be built in circle for the checks to show up)
   - [x] Require linear history
   - [x] Include administrators
 - [x] enable `dependabot` for security updates (Settings > Code security and analysis)
 - [x] ensure that Frontend team has the admin access to the repository (Settings > Collaborators and teams)
 - [x] ensure that the Bots team has write access to the repository (this is needed to release the package)
 - [ ] provide usage examples in the `README.md`
-- [ ] enable the project on circleci.com to build and test your package
+- [x] enable the project on circleci.com to build and test your package
 - [x] change the circleci status badge in this `README` to the new project
 - [ ] develop an awesome package
 - [ ] live long and prosper
