@@ -5,3 +5,7 @@ dist/
 *.tsbuildinfo
 .npm
 .eslintcache
+src/__tests__/.next/next-page-bundlesize.config.json
+src/__tests__/.next/.bundlesize*
+src/__tests__/.next/new-master-config.json
+src/__tests__/.next/bundlesize.json
