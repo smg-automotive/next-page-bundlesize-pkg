@@ -28,11 +28,11 @@ npm run build
 
 You can link your local npm package to integrate it with any local project:
 ```
-cd smg-automotive-next-page-bundlesize-pkg
+cd next-page-bundlesize-pkg
 npm run build
 
 cd <project directory>
-npm link ../smg-automotive-next-page-bundlesize-pkg
+npm link ../next-page-bundlesize-pkg
 ```
 
 ## Release a new version
