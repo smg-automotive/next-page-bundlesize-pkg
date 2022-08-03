@@ -13,11 +13,6 @@ next build
 npx next-page-bundlesize --maxSize="200 kB" --buildDir=.next
 ```
 
-When using [`@carforyou/configuration`](https://github.com/carforyou/carforyou-configuration-pkg/) and using a stage-specific build dir:
-```
-npx next-page-bundlesize --buildDir=.next-$CONFIG_ENV --maxSize="230 kB"
-```
-
 ### Arguments
 |                 Argument | Description                                                                                                                                                                                                                                                                                                                      | Default value |
 |-------------------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
