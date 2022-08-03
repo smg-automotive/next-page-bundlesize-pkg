@@ -10,7 +10,7 @@
 ```
 npm install @smg-automotiv/next-page-bundlesize -D
 next build
-npx next-page-bundlesize --maxSize="200 kB" --buildDir=.next
+npx next-page-bundlesize --maxSize="150 kB" --buildDir=.next
 ```
 
 ### Arguments
