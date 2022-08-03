@@ -1,33 +1,25 @@
-import peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import dts from 'rollup-plugin-dts';
+import executable from 'rollup-plugin-executable';
+import shebang from 'rollup-plugin-add-shebang';
 import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-
-const packageJson = require('./package.json');
 
 export default [
   {
     input: 'src/index.ts',
     output: [
       {
-        file: packageJson.main,
+        file: 'dist/bin/cli',
+        sourcemap: false,
         format: 'cjs',
-        sourcemap: true,
-      },
-      {
-        file: packageJson.module,
-        format: 'esm',
-        sourcemap: true,
       },
     ],
     plugins: [
-      peerDepsExternal(),
-      resolve(),
-      commonjs(),
+      resolve({ preferBuiltins: true }),
       typescript({ tsconfig: './tsconfig.build.json' }),
-      dts(),
+      shebang({
+        include: 'dist/bin/cli',
+      }),
+      executable(),
     ],
-    external: ['react', 'react-dom'],
   },
 ];

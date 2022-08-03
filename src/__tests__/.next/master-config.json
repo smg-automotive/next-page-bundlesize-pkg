@@ -1,0 +1,12 @@
+{
+  "files": [
+    {
+      "path": "src/__tests__/.next/.bundlesize_",
+      "maxSize": "150 kB"
+    },
+    {
+      "path": "src/__tests__/.next/.bundlesize__app",
+      "maxSize": "170 kB"
+    }
+  ]
+}
