@@ -53,6 +53,6 @@
   },
   "dependencies": {
     "bundlesize": "0.18.1",
-    "yargs": "17.5.1"
+    "yargs": "17.6.0"
   }
 }
