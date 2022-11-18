@@ -8,7 +8,7 @@
 
 ## Usage
 ```
-npm install @smg-automotiv/next-page-bundlesize -D
+npm install @smg-automotive/next-page-bundlesize -D
 next build
 npx next-page-bundlesize --maxSize="150 kB" --buildDir=.next
 ```
