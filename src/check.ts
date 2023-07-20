@@ -32,7 +32,7 @@ export interface BundleSizeConfig {
 
 const combineAppAndPageChunks = (manifest: Manifest, page: string) =>
   Array.from(
-    new Set([...manifest.pages['/_app'], ...manifest.pages[page]])
+    new Set([...manifest.pages['/_app'], ...manifest.pages[page]]),
   ).filter((chunk) => chunk.match(/\.js$/));
 
 const concatenatePageBundles = ({
@@ -44,12 +44,12 @@ const concatenatePageBundles = ({
 }): string[] =>
   Object.keys(manifest.pages).map((page) => {
     const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
-      (chunk) => path.join(buildDir, chunk)
+      (chunk) => path.join(buildDir, chunk),
     );
 
     const outFile = path.join(
       buildDir,
-      `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`
+      `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
     );
 
     fs.writeFileSync(outFile, '');
@@ -71,7 +71,7 @@ const generateBundleSizeConfig = ({
   previousConfiguration: BundleSizeConfig;
 }): BundleSizeConfig => {
   const previousConfigurationMap = new Map(
-    previousConfiguration.files.map((config) => [config.path, config.maxSize])
+    previousConfiguration.files.map((config) => [config.path, config.maxSize]),
   );
   return {
     files: pageBundles.map((pageBundleName) => ({
@@ -106,7 +106,7 @@ export default function check(args: string[]) {
     const pageBundles = concatenatePageBundles({ buildDir, manifest });
     const previousConfiguration = getPreviousConfig(
       buildDir,
-      previousConfigFileName
+      previousConfigFileName,
     );
     const config = generateBundleSizeConfig({
       pageBundles,

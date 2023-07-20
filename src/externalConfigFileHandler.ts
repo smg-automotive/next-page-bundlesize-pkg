@@ -12,17 +12,17 @@ export const writeNewConfigFile = (
   oldConfig: BundleSizeConfig,
   delta: string,
   maxSize: string,
-  buildDir: string
+  buildDir: string,
 ) => {
   try {
     const newConfig = updateConfigurationWithNewBundleSizes(
       oldConfig,
       delta,
-      maxSize
+      maxSize,
     );
     fs.writeFileSync(
       path.join(buildDir, 'bundlesize.json'),
-      JSON.stringify(newConfig, null, 2)
+      JSON.stringify(newConfig, null, 2),
     );
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -32,7 +32,7 @@ export const writeNewConfigFile = (
 
 export const getPreviousConfig = (
   buildDir: string,
-  fileName?: string
+  fileName?: string,
 ): BundleSizeConfig => {
   const emptyBundleSizeConfig: BundleSizeConfig = { files: [] };
   if (!fileName) {
@@ -46,7 +46,7 @@ export const getPreviousConfig = (
   } catch (error) {
     // eslint-disable-next-line no-console
     console.log(
-      'Previous config file not existing or invalid JSON format... using maxSize as default'
+      'Previous config file not existing or invalid JSON format... using maxSize as default',
     );
     return emptyBundleSizeConfig;
   }
@@ -55,13 +55,13 @@ export const getPreviousConfig = (
 const updateConfigurationWithNewBundleSizes = (
   config: BundleSizeConfig,
   delta: string,
-  maxSize: string
+  maxSize: string,
 ): BundleSizeConfig => {
   let totalBundleSize = 0;
   const newConfig = config.files.map((file) => {
     const sizeInBytes = compressedSize(
       fs.readFileSync(file.path, 'utf8'),
-      'gzip'
+      'gzip',
     );
     const deltaInBytes = bytes(delta);
     const maxSizeInBytes = bytes(maxSize);
@@ -72,7 +72,7 @@ const updateConfigurationWithNewBundleSizes = (
       maxSize: bytes(
         sizeInBytes < maxSizeInBytes
           ? sizeInBytes + deltaInBytes
-          : sizeInBytes + 500 // magic number 500 is to prevent failing if it's exactly the same size
+          : sizeInBytes + 500, // magic number 500 is to prevent failing if it's exactly the same size
       ),
     };
   });
