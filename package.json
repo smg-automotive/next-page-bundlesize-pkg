@@ -31,7 +31,7 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "15.2.3",
     "@rollup/plugin-typescript": "11.1.6",
-    "@smg-automotive/eslint-config": "4.0.40",
+    "@smg-automotive/eslint-config": "4.0.41",
     "@testing-library/jest-dom": "6.4.2",
     "@testing-library/react": "14.2.1",
     "@testing-library/user-event": "14.5.2",
@@ -45,7 +45,7 @@
     "rollup-plugin-add-shebang": "0.3.1",
     "rollup-plugin-executable": "1.6.3",
     "rollup-plugin-peer-deps-external": "2.2.4",
-    "semantic-release": "23.0.0",
+    "semantic-release": "23.0.2",
     "ts-jest": "29.1.2",
     "ts-node": "10.9.2",
     "tslib": "2.6.2",
