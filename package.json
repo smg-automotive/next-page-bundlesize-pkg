@@ -52,7 +52,7 @@
     "typescript": "5.4.2"
   },
   "dependencies": {
-    "bundlesize": "0.18.1",
+    "bundlesize": "0.18.2",
     "yargs": "17.7.2"
   }
 }
