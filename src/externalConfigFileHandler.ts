@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
 import fs from 'fs';
 
 import { BundleSizeConfig } from './check';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const bytes = require('bytes');
-// eslint-disable-next-line @typescript-eslint/no-var-requires, import/no-internal-modules
 const compressedSize = require('bundlesize/src/compressed-size');
 
 export const writeNewConfigFile = (
@@ -43,7 +42,7 @@ export const getPreviousConfig = (
   try {
     const config = fs.readFileSync(path.join(buildDir, fileName)).toString();
     return JSON.parse(config);
-  } catch (error) {
+  } catch {
     // eslint-disable-next-line no-console
     console.log(
       'Previous config file not existing or invalid JSON format... using maxSize as default',
