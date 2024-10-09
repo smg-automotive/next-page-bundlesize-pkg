@@ -15,7 +15,10 @@ export default [
     ],
     plugins: [
       resolve({ preferBuiltins: true }),
-      typescript({ tsconfig: './tsconfig.build.json' }),
+      typescript({
+        tsconfig: './tsconfig.build.json',
+        outDir: 'dist/bin',
+      }),
       shebang({
         include: 'dist/bin/cli',
       }),
