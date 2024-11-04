@@ -37,29 +37,35 @@ const combineAppAndPageChunks = (manifest: Manifest, page: string) =>
 
 const concatenatePageBundles = ({
   buildDir,
-  manifest,
+  manifests,
 }: {
   buildDir: string;
-  manifest: Manifest;
-}): string[] =>
-  Object.keys(manifest.pages).map((page) => {
-    const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
-      (chunk) => path.join(buildDir, chunk),
-    );
+  manifests: Manifest[];
+}): string[] => {
+  const pageBundles: string[] = [];
+  manifests.forEach((manifest) => {
+    Object.keys(manifest.pages).forEach((page) => {
+      const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
+        (chunk) => path.join(buildDir, chunk),
+      );
 
-    const outFile = path.join(
-      buildDir,
-      `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
-    );
+      const outFile = path.join(
+        buildDir,
+        `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
+      );
 
-    fs.writeFileSync(outFile, '');
-    firstLoadChunks.forEach((chunk) => {
-      const chunkContent = fs.readFileSync(chunk);
-      fs.appendFileSync(outFile, chunkContent);
+      fs.writeFileSync(outFile, '');
+      firstLoadChunks.forEach((chunk) => {
+        const chunkContent = fs.readFileSync(chunk);
+        fs.appendFileSync(outFile, chunkContent);
+      });
+
+      pageBundles.push(outFile);
     });
-
-    return outFile;
   });
+
+  return pageBundles;
+};
 
 const generateBundleSizeConfig = ({
   pageBundles,
@@ -100,10 +106,39 @@ export default function check(args: string[]) {
     const { maxSize, buildDir, delta, previousConfigFileName } =
       extractArgs(args);
 
-    const manifestFile = path.join(buildDir, 'build-manifest.json');
-    const manifest = JSON.parse(fs.readFileSync(manifestFile).toString());
+    const manifestPagesRouterFile = path.join(buildDir, 'build-manifest.json');
+    const pagesManifest = JSON.parse(
+      fs.readFileSync(manifestPagesRouterFile).toString(),
+    );
+    const manifests = [pagesManifest];
 
-    const pageBundles = concatenatePageBundles({ buildDir, manifest });
+    try {
+      const manifestAppRouterFile = path.join(
+        buildDir,
+        'app-build-manifest.json',
+      );
+      const appManifest = JSON.parse(
+        fs.readFileSync(manifestAppRouterFile).toString(),
+      );
+      manifests.push(appManifest);
+    } catch (err) {
+      const isFileNotExistingError =
+        err &&
+        typeof err === 'object' &&
+        'code' in err &&
+        err.code === 'ENOENT';
+
+      if (!isFileNotExistingError) {
+        // eslint-disable-next-line no-console
+        console.log(err);
+        process.exit(1);
+      }
+    }
+
+    const pageBundles = concatenatePageBundles({
+      buildDir,
+      manifests,
+    });
     const previousConfiguration = getPreviousConfig(
       buildDir,
       previousConfigFileName,
