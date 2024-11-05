@@ -112,8 +112,8 @@ const loadFile = ({
   fileName: string;
 }) => {
   try {
-    const manifestAppRouterFile = path.join(buildDir, fileName);
-    return JSON.parse(fs.readFileSync(manifestAppRouterFile).toString());
+    const pathToLoad = path.join(buildDir, fileName);
+    return JSON.parse(fs.readFileSync(pathToLoad).toString());
   } catch (err) {
     const isFileNotExistingError =
       err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT';
