@@ -30,10 +30,12 @@ export interface BundleSizeConfig {
   }>;
 }
 
-const combineAppAndPageChunks = (manifest: Manifest, page: string) =>
-  Array.from(
-    new Set([...manifest.pages['/_app'], ...manifest.pages[page]]),
+const combineAppAndPageChunks = (manifest: Manifest, page: string) => {
+  const appPageChunks = manifest.pages['/_app'];
+  return Array.from(
+    new Set([...(appPageChunks ? appPageChunks : []), ...manifest.pages[page]]),
   ).filter((chunk) => chunk.match(/\.js$/));
+};
 
 const concatenatePageBundles = ({
   buildDir,
