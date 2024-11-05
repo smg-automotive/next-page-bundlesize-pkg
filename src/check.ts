@@ -46,6 +46,7 @@ const concatenatePageBundles = ({
 }): string[] => {
   const pageBundles: string[] = [];
   manifests.forEach((manifest) => {
+    if (!manifest.pages) return;
     Object.keys(manifest.pages).forEach((page) => {
       const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
         (chunk) => path.join(buildDir, chunk),
