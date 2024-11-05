@@ -103,39 +103,39 @@ const extractArgs = (args: string[]) => {
   };
 };
 
+const loadFile = ({
+  buildDir,
+  fileName,
+}: {
+  buildDir: string;
+  fileName: string;
+}) => {
+  try {
+    const manifestAppRouterFile = path.join(buildDir, fileName);
+    return JSON.parse(fs.readFileSync(manifestAppRouterFile).toString());
+  } catch (err) {
+    const isFileNotExistingError =
+      err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT';
+
+    if (!isFileNotExistingError) {
+      // eslint-disable-next-line no-console
+      console.log(err);
+      process.exit(1);
+    }
+  }
+};
+
 export default function check(args: string[]) {
   try {
     const { maxSize, buildDir, delta, previousConfigFileName } =
       extractArgs(args);
 
-    const manifestPagesRouterFile = path.join(buildDir, 'build-manifest.json');
-    const pagesManifest = JSON.parse(
-      fs.readFileSync(manifestPagesRouterFile).toString(),
-    );
-    const manifests = [pagesManifest];
-
-    try {
-      const manifestAppRouterFile = path.join(
-        buildDir,
-        'app-build-manifest.json',
-      );
-      const appManifest = JSON.parse(
-        fs.readFileSync(manifestAppRouterFile).toString(),
-      );
-      manifests.push(appManifest);
-    } catch (err) {
-      const isFileNotExistingError =
-        err &&
-        typeof err === 'object' &&
-        'code' in err &&
-        err.code === 'ENOENT';
-
-      if (!isFileNotExistingError) {
-        // eslint-disable-next-line no-console
-        console.log(err);
-        process.exit(1);
-      }
-    }
+    const manifests = [
+      // pages router build manifest
+      loadFile({ buildDir, fileName: 'build-manifest.json' }),
+      // app router build manifest
+      loadFile({ buildDir, fileName: 'app-build-manifest.json' }),
+    ];
 
     const pageBundles = concatenatePageBundles({
       buildDir,
