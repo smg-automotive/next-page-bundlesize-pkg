@@ -1,0 +1,10 @@
+{
+  "pages": {
+    "/[locale]/layout": [
+      "app-router-layout.js"
+    ],
+    "/[locale]/search": [
+      "app-router-search.js"
+    ]
+  }
+}
