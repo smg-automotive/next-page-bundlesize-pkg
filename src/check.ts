@@ -46,7 +46,6 @@ const concatenatePageBundles = ({
 }): string[] => {
   const pageBundles: string[] = [];
   manifests.forEach((manifest) => {
-    if (!manifest.pages) return;
     Object.keys(manifest.pages).forEach((page) => {
       const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
         (chunk) => path.join(buildDir, chunk),
@@ -110,7 +109,7 @@ const loadFile = ({
 }: {
   buildDir: string;
   fileName: string;
-}) => {
+}): Manifest => {
   try {
     const pathToLoad = path.join(buildDir, fileName);
     return JSON.parse(fs.readFileSync(pathToLoad).toString());
@@ -123,6 +122,7 @@ const loadFile = ({
       console.log(err);
       process.exit(1);
     }
+    return { pages: {} };
   }
 };
 
