@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/smg-automotive/next-page-bundlesize-pkg#readme",
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "15.3.1",
+    "@rollup/plugin-node-resolve": "16.0.0",
     "@rollup/plugin-typescript": "12.1.2",
     "@smg-automotive/eslint-config": "4.0.101",
     "@testing-library/jest-dom": "6.6.3",
