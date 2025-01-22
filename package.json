@@ -15,7 +15,7 @@
   "scripts": {
     "version": "npm run build",
     "build": "rimraf dist && rollup -c",
-    "lint": "eslint --ext ts,js,tsx,jsx,json .",
+    "lint": "eslint .",
     "format": "npm run lint -- --fix",
     "typecheck": "tsc --noEmit",
     "test": "jest",
@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "bundlesize": "0.18.2",
+    "globals": "15.14.0",
     "yargs": "17.7.2"
   }
 }

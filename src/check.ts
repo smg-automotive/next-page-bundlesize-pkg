@@ -53,6 +53,7 @@ const concatenatePageBundles = ({
 
       const outFile = path.join(
         buildDir,
+        // eslint-disable-next-line sonarjs/single-char-in-character-classes
         `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
       );
 
@@ -155,6 +156,7 @@ export default function check(args: string[]) {
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
     writeNewConfigFile(config, delta, maxSize, buildDir);
 
+    // eslint-disable-next-line sonarjs/os-command
     execSync(`npx bundlesize --config=${configFile}`, { stdio: 'inherit' });
   } catch (err) {
     // eslint-disable-next-line no-console
