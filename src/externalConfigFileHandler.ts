@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
+import { gzipSizeSync } from 'gzip-size';
 import fs from 'fs';
 
 import { BundleSizeConfig } from './check';
 
 const bytes = require('bytes');
-const compressedSize = require('bundlesize/src/compressed-size');
 
 export const writeNewConfigFile = (
   oldConfig: BundleSizeConfig,
@@ -58,10 +58,7 @@ const updateConfigurationWithNewBundleSizes = (
 ): BundleSizeConfig => {
   let totalBundleSize = 0;
   const newConfig = config.files.map((file) => {
-    const sizeInBytes = compressedSize(
-      fs.readFileSync(file.path, 'utf8'),
-      'gzip',
-    );
+    const sizeInBytes = gzipSizeSync(fs.readFileSync(file.path, 'utf8'));
     const deltaInBytes = bytes(delta);
     const maxSizeInBytes = bytes(maxSize);
     totalBundleSize += sizeInBytes;

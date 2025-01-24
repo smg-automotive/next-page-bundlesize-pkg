@@ -2,6 +2,7 @@ import executable from 'rollup-plugin-executable';
 import shebang from 'rollup-plugin-add-shebang';
 import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
 export default [
   {
@@ -15,6 +16,7 @@ export default [
     ],
     plugins: [
       resolve({ preferBuiltins: true }),
+      commonjs(),
       typescript({
         tsconfig: './tsconfig.build.json',
         outDir: 'dist/bin',
