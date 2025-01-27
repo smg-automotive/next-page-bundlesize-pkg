@@ -157,7 +157,7 @@ export default function check(args: string[]) {
     writeNewConfigFile(config, delta, maxSize, buildDir);
 
     // eslint-disable-next-line sonarjs/os-command
-    execSync(`npx bundlesize --config=${configFile}`, { stdio: 'inherit' });
+    execSync(`npx bundlesize2 --config=${configFile}`, { stdio: 'inherit' });
   } catch (err) {
     // eslint-disable-next-line no-console
     console.log(err);
