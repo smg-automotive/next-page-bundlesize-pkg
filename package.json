@@ -30,7 +30,7 @@
   "homepage": "https://github.com/smg-automotive/next-page-bundlesize-pkg#readme",
   "devDependencies": {
     "@babel/preset-env": "7.28.5",
-    "@rollup/plugin-commonjs": "28.0.9",
+    "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-typescript": "12.3.0",
     "@smg-automotive/eslint-config": "5.2.2",
