@@ -58,6 +58,6 @@
     "bundlesize2": "0.0.35",
     "globals": "17.0.0",
     "gzip-size": "7.0.0",
-    "yargs": "17.7.2"
+    "yargs": "18.0.0"
   }
 }
