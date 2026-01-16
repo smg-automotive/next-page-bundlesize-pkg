@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
+import { hideBin } from 'yargs/helpers';
+import yargs from 'yargs';
 import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
@@ -8,7 +9,6 @@ import {
   writeNewConfigFile,
 } from './externalConfigFileHandler';
 
-const { parse } = require('yargs');
 interface Args {
   maxSize: string;
   buildDir: string;
@@ -91,7 +91,7 @@ const generateBundleSizeConfig = ({
 };
 
 const extractArgs = (args: string[]) => {
-  const parsedArgs = parse(args) as unknown as Args;
+  const parsedArgs = yargs(hideBin(args)).parse() as unknown as Args;
   const maxSize = parsedArgs.maxSize || '200 kB';
   const buildDir = parsedArgs.buildDir || '.next';
   const delta = parsedArgs.delta || '5 kB';
