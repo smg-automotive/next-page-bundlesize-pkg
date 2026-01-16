@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
 import { gzipSizeSync } from 'gzip-size';
 import fs from 'fs';
 
-import { BundleSizeConfig } from './check';
+import bytes from 'bytes';
 
-const bytes = require('bytes');
+import { BundleSizeConfig } from './check';
 
 export const writeNewConfigFile = (
   oldConfig: BundleSizeConfig,
@@ -59,17 +58,18 @@ const updateConfigurationWithNewBundleSizes = (
   let totalBundleSize = 0;
   const newConfig = config.files.map((file) => {
     const sizeInBytes = gzipSizeSync(fs.readFileSync(file.path, 'utf8'));
-    const deltaInBytes = bytes(delta);
-    const maxSizeInBytes = bytes(maxSize);
+    const deltaInBytes = bytes(delta) || 0;
+    const maxSizeInBytes = bytes(maxSize) || 0;
     totalBundleSize += sizeInBytes;
 
     return {
       path: file.path,
-      maxSize: bytes(
-        sizeInBytes < maxSizeInBytes
-          ? sizeInBytes + deltaInBytes
-          : sizeInBytes + 500, // magic number 500 is to prevent failing if it's exactly the same size
-      ),
+      maxSize:
+        bytes(
+          sizeInBytes < maxSizeInBytes
+            ? sizeInBytes + deltaInBytes
+            : sizeInBytes + 500, // magic number 500 is to prevent failing if it's exactly the same size
+        ) || '0B',
     };
   });
 

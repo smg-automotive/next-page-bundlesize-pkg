@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import check from '../check';
 
@@ -12,7 +13,9 @@ const validRunConfig = [
 ];
 
 describe('cli', () => {
-  const mockExit = jest.spyOn(process, 'exit').mockImplementation();
+  const mockExit = jest
+    .spyOn(process, 'exit')
+    .mockImplementation(() => undefined as never);
 
   beforeEach(() => {
     jest.resetModules();
