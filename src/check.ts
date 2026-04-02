@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
 import fs from 'fs';
-import { execSync } from 'child_process';
 
 import {
   getPreviousConfig,
@@ -9,6 +8,8 @@ import {
 } from './externalConfigFileHandler';
 
 const { parse } = require('yargs');
+const bytes = require('bytes');
+
 interface Args {
   maxSize: string;
   buildDir: string;
@@ -16,11 +17,15 @@ interface Args {
   previousConfigFileName?: string;
 }
 
-interface Manifest {
-  pages: {
-    [pageName: string]: string[];
-  };
-  [key: string]: Record<string, string | string[]>;
+interface AnalyzeRouteData {
+  output_files: Array<{
+    filename: string;
+  }>;
+  chunk_parts: Array<{
+    output_file_index: number;
+    size: number;
+    compressed_size: number;
+  }>;
 }
 
 export interface BundleSizeConfig {
@@ -30,52 +35,95 @@ export interface BundleSizeConfig {
   }>;
 }
 
-const combineAppAndPageChunks = (manifest: Manifest, page: string) => {
-  const appPageChunks = manifest.pages['/_app'];
-  return Array.from(
-    new Set([...(appPageChunks ? appPageChunks : []), ...manifest.pages[page]]),
-  ).filter((chunk) => chunk.match(/\.js$/));
+interface RouteBundle {
+  path: string;
+  route: string;
+  gzipSize: number;
+}
+
+const toBundlePath = (buildDir: string, route: string) =>
+  path.join(
+    buildDir,
+    // eslint-disable-next-line sonarjs/single-char-in-character-classes
+    `.bundlesize${route.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
+  );
+
+const loadRoutes = (buildDir: string): string[] => {
+  const routesPath = path.join(buildDir, 'data', 'routes.json');
+  return JSON.parse(fs.readFileSync(routesPath, 'utf8')) as string[];
 };
 
-const concatenatePageBundles = ({
+const getRouteAnalyzeDataPath = (buildDir: string, route: string) => {
+  const routeSegments = route.split('/').filter(Boolean);
+  return path.join(buildDir, 'data', ...routeSegments, 'analyze.data');
+};
+
+const loadAnalyzeData = (buildDir: string, route: string): AnalyzeRouteData => {
+  const dataPath = getRouteAnalyzeDataPath(buildDir, route);
+  const file = fs.readFileSync(dataPath);
+  const jsonLength = file.readUInt32BE(0);
+  return JSON.parse(
+    file.subarray(4, 4 + jsonLength).toString('utf8'),
+  ) as AnalyzeRouteData;
+};
+
+const getRouteBundleSize = (routeData: AnalyzeRouteData) => {
+  const clientChunkIndexes = new Set(
+    routeData.output_files.flatMap((file, index) =>
+      file.filename.startsWith('[client-fs]/_next/static/') &&
+      file.filename.endsWith('.js')
+        ? [index]
+        : [],
+    ),
+  );
+
+  return routeData.chunk_parts.reduce((total, part) => {
+    if (!clientChunkIndexes.has(part.output_file_index)) {
+      return total;
+    }
+
+    return total + part.compressed_size;
+  }, 0);
+};
+
+const writeBundleMetadataFiles = ({
   buildDir,
-  manifests,
+  routes,
 }: {
   buildDir: string;
-  manifests: Manifest[];
-}): string[] => {
-  const pageBundles: string[] = [];
-  manifests.forEach((manifest) => {
-    Object.keys(manifest.pages).forEach((page) => {
-      const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
-        (chunk) => path.join(buildDir, chunk),
-      );
+  routes: string[];
+}): RouteBundle[] => {
+  return routes.map((route) => {
+    const routeData = loadAnalyzeData(buildDir, route);
+    const outFile = toBundlePath(buildDir, route);
+    const gzipSize = getRouteBundleSize(routeData);
 
-      const outFile = path.join(
-        buildDir,
-        // eslint-disable-next-line sonarjs/single-char-in-character-classes
-        `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
-      );
+    fs.writeFileSync(
+      outFile,
+      JSON.stringify(
+        {
+          route,
+          gzipSize,
+        },
+        null,
+        2,
+      ),
+    );
 
-      fs.writeFileSync(outFile, '');
-      firstLoadChunks.forEach((chunk) => {
-        const chunkContent = fs.readFileSync(chunk);
-        fs.appendFileSync(outFile, chunkContent);
-      });
-
-      pageBundles.push(outFile);
-    });
+    return {
+      path: outFile,
+      route,
+      gzipSize,
+    };
   });
-
-  return pageBundles;
 };
 
 const generateBundleSizeConfig = ({
-  pageBundles,
+  routeBundles,
   maxSize,
   previousConfiguration,
 }: {
-  pageBundles: string[];
+  routeBundles: RouteBundle[];
   maxSize: string;
   previousConfiguration: BundleSizeConfig;
 }): BundleSizeConfig => {
@@ -83,17 +131,22 @@ const generateBundleSizeConfig = ({
     previousConfiguration.files.map((config) => [config.path, config.maxSize]),
   );
   return {
-    files: pageBundles.map((pageBundleName) => ({
-      path: pageBundleName,
-      maxSize: previousConfigurationMap.get(pageBundleName) || maxSize,
+    files: routeBundles.map((routeBundle) => ({
+      path: routeBundle.path,
+      maxSize: previousConfigurationMap.get(routeBundle.path) || maxSize,
     })),
   };
+};
+
+const getDefaultBuildDir = () => {
+  const analyzeBuildDir = '.next/diagnostics/analyze';
+  return fs.existsSync(analyzeBuildDir) ? analyzeBuildDir : '.next';
 };
 
 const extractArgs = (args: string[]) => {
   const parsedArgs = parse(args) as unknown as Args;
   const maxSize = parsedArgs.maxSize || '200 kB';
-  const buildDir = parsedArgs.buildDir || '.next';
+  const buildDir = parsedArgs.buildDir || getDefaultBuildDir();
   const delta = parsedArgs.delta || '5 kB';
 
   return {
@@ -104,27 +157,60 @@ const extractArgs = (args: string[]) => {
   };
 };
 
-const loadFile = ({
-  buildDir,
-  fileName,
+const validateBundles = ({
+  config,
+  routeBundles,
 }: {
-  buildDir: string;
-  fileName: string;
-}): Manifest => {
-  try {
-    const pathToLoad = path.join(buildDir, fileName);
-    return JSON.parse(fs.readFileSync(pathToLoad).toString());
-  } catch (err) {
-    const isFileNotExistingError =
-      err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT';
+  config: BundleSizeConfig;
+  routeBundles: RouteBundle[];
+}) => {
+  const routeBundleMap = new Map(
+    routeBundles.map((routeBundle) => [routeBundle.path, routeBundle]),
+  );
 
-    if (!isFileNotExistingError) {
-      // eslint-disable-next-line no-console
-      console.log(err);
-      process.exit(1);
+  const failedBundles = config.files.flatMap((bundleConfig) => {
+    const routeBundle = routeBundleMap.get(bundleConfig.path);
+    if (!routeBundle) {
+      return [];
     }
-    return { pages: {} };
+
+    const maxSizeInBytes = bytes(bundleConfig.maxSize);
+    if (routeBundle.gzipSize <= maxSizeInBytes) {
+      return [];
+    }
+
+    return [
+      {
+        route: routeBundle.route,
+        path: bundleConfig.path,
+        actualSize: routeBundle.gzipSize,
+        maxSize: bundleConfig.maxSize,
+      },
+    ];
+  });
+
+  if (failedBundles.length === 0) {
+    config.files.forEach((bundleConfig) => {
+      const routeBundle = routeBundleMap.get(bundleConfig.path);
+      if (!routeBundle) {
+        return;
+      }
+
+      // eslint-disable-next-line no-console
+      console.log(
+        `PASS ${routeBundle.route}: ${bytes(routeBundle.gzipSize)} <= ${bundleConfig.maxSize}`,
+      );
+    });
+    return true;
   }
+
+  failedBundles.forEach((bundle) => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `FAIL ${bundle.route}: ${bytes(bundle.actualSize)} > ${bundle.maxSize}`,
+    );
+  });
+  return false;
 };
 
 export default function check(args: string[]) {
@@ -132,37 +218,30 @@ export default function check(args: string[]) {
     const { maxSize, buildDir, delta, previousConfigFileName } =
       extractArgs(args);
 
-    const manifests = [
-      // pages router build manifest
-      loadFile({ buildDir, fileName: 'build-manifest.json' }),
-      // app router build manifest
-      loadFile({ buildDir, fileName: 'app-build-manifest.json' }),
-    ];
-
-    const pageBundles = concatenatePageBundles({
+    const routes = loadRoutes(buildDir);
+    const routeBundles = writeBundleMetadataFiles({
       buildDir,
-      manifests,
+      routes,
     });
     const previousConfiguration = getPreviousConfig(
       buildDir,
       previousConfigFileName,
     );
     const config = generateBundleSizeConfig({
-      pageBundles,
+      routeBundles,
       maxSize,
       previousConfiguration,
     });
     const configFile = path.join(buildDir, 'next-page-bundlesize.config.json');
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
     writeNewConfigFile(config, delta, maxSize, buildDir);
-
-    // eslint-disable-next-line sonarjs/os-command
-    execSync(`npx bundlesize2 --config=${configFile}`, { stdio: 'inherit' });
+    const isValid = validateBundles({ config, routeBundles });
+    process.exit(isValid ? 0 : 1);
+    return;
   } catch (err) {
     // eslint-disable-next-line no-console
     console.log(err);
     process.exit(1);
+    return;
   }
-
-  process.exit(0);
 }

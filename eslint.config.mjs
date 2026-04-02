@@ -5,7 +5,12 @@ import baseConfig from '@smg-automotive/eslint-config/default';
 export default [
   ...baseConfig,
   {
-    ignores: ['!.prettierrc.mjs'],
+    ignores: [
+      '!.prettierrc.mjs',
+      'analyze/**',
+      'src/__tests__/.analyze/**',
+      'src/__tests__/.next/**',
+    ],
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],

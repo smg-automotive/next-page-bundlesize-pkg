@@ -1,11 +1,26 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import { gzipSync } from 'zlib';
 import path from 'path';
-import { gzipSizeSync } from 'gzip-size';
 import fs from 'fs';
 
 import { BundleSizeConfig } from './check';
 
 const bytes = require('bytes');
+
+const getBundleSize = (filePath: string) => {
+  const fileContent = fs.readFileSync(filePath, 'utf8');
+
+  try {
+    const parsed = JSON.parse(fileContent) as { gzipSize?: number };
+    if (typeof parsed.gzipSize === 'number') {
+      return parsed.gzipSize;
+    }
+  } catch {
+    // fall back to measuring the raw file contents for legacy bundle files
+  }
+
+  return gzipSync(fileContent).byteLength;
+};
 
 export const writeNewConfigFile = (
   oldConfig: BundleSizeConfig,
@@ -58,7 +73,7 @@ const updateConfigurationWithNewBundleSizes = (
 ): BundleSizeConfig => {
   let totalBundleSize = 0;
   const newConfig = config.files.map((file) => {
-    const sizeInBytes = gzipSizeSync(fs.readFileSync(file.path, 'utf8'));
+    const sizeInBytes = getBundleSize(file.path);
     const deltaInBytes = bytes(delta);
     const maxSizeInBytes = bytes(maxSize);
     totalBundleSize += sizeInBytes;
