@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
 import fs from 'fs';
-import { execSync } from 'child_process';
 
+import { getRouteBundleSizes, toLegacyBundlePath } from './nextAnalyzeData';
 import {
   getPreviousConfig,
   writeNewConfigFile,
 } from './externalConfigFileHandler';
 
 const { parse } = require('yargs');
+const bytes = require('bytes');
 interface Args {
   maxSize: string;
   buildDir: string;
@@ -16,66 +17,25 @@ interface Args {
   previousConfigFileName?: string;
 }
 
-interface Manifest {
-  pages: {
-    [pageName: string]: string[];
-  };
-  [key: string]: Record<string, string | string[]>;
-}
-
 export interface BundleSizeConfig {
   files: Array<{
     path: string;
     maxSize: string;
+    size?: string;
   }>;
 }
 
-const combineAppAndPageChunks = (manifest: Manifest, page: string) => {
-  const appPageChunks = manifest.pages['/_app'];
-  return Array.from(
-    new Set([...(appPageChunks ? appPageChunks : []), ...manifest.pages[page]]),
-  ).filter((chunk) => chunk.match(/\.js$/));
-};
-
-const concatenatePageBundles = ({
-  buildDir,
-  manifests,
-}: {
-  buildDir: string;
-  manifests: Manifest[];
-}): string[] => {
-  const pageBundles: string[] = [];
-  manifests.forEach((manifest) => {
-    Object.keys(manifest.pages).forEach((page) => {
-      const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
-        (chunk) => path.join(buildDir, chunk),
-      );
-
-      const outFile = path.join(
-        buildDir,
-        // eslint-disable-next-line sonarjs/single-char-in-character-classes
-        `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
-      );
-
-      fs.writeFileSync(outFile, '');
-      firstLoadChunks.forEach((chunk) => {
-        const chunkContent = fs.readFileSync(chunk);
-        fs.appendFileSync(outFile, chunkContent);
-      });
-
-      pageBundles.push(outFile);
-    });
-  });
-
-  return pageBundles;
-};
-
 const generateBundleSizeConfig = ({
-  pageBundles,
+  buildDir,
+  routeBundles,
   maxSize,
   previousConfiguration,
 }: {
-  pageBundles: string[];
+  buildDir: string;
+  routeBundles: Array<{
+    path: string;
+    size: number;
+  }>;
   maxSize: string;
   previousConfiguration: BundleSizeConfig;
 }): BundleSizeConfig => {
@@ -83,9 +43,15 @@ const generateBundleSizeConfig = ({
     previousConfiguration.files.map((config) => [config.path, config.maxSize]),
   );
   return {
-    files: pageBundles.map((pageBundleName) => ({
-      path: pageBundleName,
-      maxSize: previousConfigurationMap.get(pageBundleName) || maxSize,
+    files: routeBundles.map((routeBundle) => ({
+      path: routeBundle.path,
+      maxSize:
+        previousConfigurationMap.get(routeBundle.path) ||
+        previousConfigurationMap.get(
+          toLegacyBundlePath(buildDir, routeBundle.path),
+        ) ||
+        maxSize,
+      size: bytes(routeBundle.size),
     })),
   };
 };
@@ -104,27 +70,41 @@ const extractArgs = (args: string[]) => {
   };
 };
 
-const loadFile = ({
-  buildDir,
-  fileName,
+const checkBundleSizes = ({
+  config,
+  routeBundles,
 }: {
-  buildDir: string;
-  fileName: string;
-}): Manifest => {
-  try {
-    const pathToLoad = path.join(buildDir, fileName);
-    return JSON.parse(fs.readFileSync(pathToLoad).toString());
-  } catch (err) {
-    const isFileNotExistingError =
-      err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT';
+  config: BundleSizeConfig;
+  routeBundles: Array<{
+    path: string;
+    size: number;
+  }>;
+}) => {
+  const routeBundleMap = new Map(
+    routeBundles.map((routeBundle) => [routeBundle.path, routeBundle.size]),
+  );
 
-    if (!isFileNotExistingError) {
-      // eslint-disable-next-line no-console
-      console.log(err);
-      process.exit(1);
-    }
-    return { pages: {} };
-  }
+  return config.files
+    .map((file) => {
+      const bundleSize = routeBundleMap.get(file.path);
+      if (bundleSize === undefined) {
+        return null;
+      }
+
+      const maxSize = bytes(file.maxSize);
+      if (typeof maxSize !== 'number') {
+        throw new Error(
+          `Could not parse max size "${file.maxSize}" for ${file.path}`,
+        );
+      }
+
+      if (bundleSize <= maxSize) {
+        return null;
+      }
+
+      return `${file.path}: ${bytes(bundleSize)} exceeds ${file.maxSize}`;
+    })
+    .filter((failure): failure is string => failure !== null);
 };
 
 export default function check(args: string[]) {
@@ -132,36 +112,41 @@ export default function check(args: string[]) {
     const { maxSize, buildDir, delta, previousConfigFileName } =
       extractArgs(args);
 
-    const manifests = [
-      // pages router build manifest
-      loadFile({ buildDir, fileName: 'build-manifest.json' }),
-      // app router build manifest
-      loadFile({ buildDir, fileName: 'app-build-manifest.json' }),
-    ];
-
-    const pageBundles = concatenatePageBundles({
-      buildDir,
-      manifests,
-    });
+    const routeBundles = getRouteBundleSizes(buildDir);
     const previousConfiguration = getPreviousConfig(
       buildDir,
       previousConfigFileName,
     );
     const config = generateBundleSizeConfig({
-      pageBundles,
+      buildDir,
+      routeBundles,
       maxSize,
       previousConfiguration,
     });
     const configFile = path.join(buildDir, 'next-page-bundlesize.config.json');
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
-    writeNewConfigFile(config, delta, maxSize, buildDir);
+    writeNewConfigFile(routeBundles, delta, maxSize, buildDir);
 
-    // eslint-disable-next-line sonarjs/os-command
-    execSync(`npx bundlesize2 --config=${configFile}`, { stdio: 'inherit' });
+    const failures = checkBundleSizes({
+      config,
+      routeBundles,
+    });
+
+    if (failures.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log('Bundle size check failed:');
+      failures.forEach((failure) => {
+        // eslint-disable-next-line no-console
+        console.log(`- ${failure}`);
+      });
+      process.exit(1);
+      return;
+    }
   } catch (err) {
     // eslint-disable-next-line no-console
     console.log(err);
     process.exit(1);
+    return;
   }
 
   process.exit(0);

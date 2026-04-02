@@ -9,17 +9,19 @@
 ## Usage
 ```
 npm install @smg-automotive/next-page-bundlesize -D
-next build
+next experimental-analyze --output
 npx next-page-bundlesize --maxSize="150 kB" --buildDir=.next
 ```
+
+`next experimental-analyze --output` writes the analyzer data into `.next/diagnostics/analyze`, and this package reads those generated route stats directly.
 
 ### Arguments
 |                 Argument | Description                                                                                                                                                                                                                                                                                                                      | Default value |
 |-------------------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
 | --maxSize                | Max size of the pages that you aim for. If no previous config is specified, it is applied for all pages. If you have specified a config, the value of the previous config is taken and maxSize is only applied to new pages.                                                                                                     | "200 kB"      |
-| --buildDir               | Directory where your project is built.                                                                                                                                                                                                                                                                                           | ".next"       |
+| --buildDir               | Directory where your project is built. The analyzer data is expected under `buildDir/diagnostics/analyze/data`.                                                                                                                                                                                                                | ".next"       |
 | --delta                  | Delta for pages **below** maxSize so that they don't get bigger and bigger.                                                                                                                                                                                                                                                      | "5 kB"        |
-| --previousConfigFileName | If you want to compare the bundlesize against a previous configuration and not the maxSize. The file must be located under the buildDir `buildDir/previousConfigFileName`.  The package will create an updated configuration for further usage in the same directory `buildDir/bundlesize.json`
+| --previousConfigFileName | If you want to compare the bundlesize against a previous configuration and not the maxSize. The file must be located under the buildDir `buildDir/previousConfigFileName`. The package will create an updated configuration for further usage in the same directory `buildDir/bundlesize.json`. |
 
 ## Development
 ```

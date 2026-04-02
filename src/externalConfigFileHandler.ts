@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
-import { gzipSizeSync } from 'gzip-size';
 import fs from 'fs';
 
+import { RouteBundleSize } from './nextAnalyzeData';
 import { BundleSizeConfig } from './check';
 
 const bytes = require('bytes');
 
 export const writeNewConfigFile = (
-  oldConfig: BundleSizeConfig,
+  routeBundles: RouteBundleSize[],
   delta: string,
   maxSize: string,
   buildDir: string,
 ) => {
   try {
     const newConfig = updateConfigurationWithNewBundleSizes(
-      oldConfig,
+      routeBundles,
       delta,
       maxSize,
     );
@@ -52,19 +52,19 @@ export const getPreviousConfig = (
 };
 
 const updateConfigurationWithNewBundleSizes = (
-  config: BundleSizeConfig,
+  routeBundles: RouteBundleSize[],
   delta: string,
   maxSize: string,
 ): BundleSizeConfig => {
   let totalBundleSize = 0;
-  const newConfig = config.files.map((file) => {
-    const sizeInBytes = gzipSizeSync(fs.readFileSync(file.path, 'utf8'));
+  const newConfig = routeBundles.map((routeBundle) => {
+    const sizeInBytes = routeBundle.size;
     const deltaInBytes = bytes(delta);
     const maxSizeInBytes = bytes(maxSize);
     totalBundleSize += sizeInBytes;
 
     return {
-      path: file.path,
+      path: routeBundle.path,
       maxSize: bytes(
         sizeInBytes < maxSizeInBytes
           ? sizeInBytes + deltaInBytes

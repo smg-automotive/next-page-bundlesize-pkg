@@ -4,49 +4,47 @@ exports[`cli adds a delta to the new config if smaller than maxSize 1`] = `
 "{
   "files": [
     {
-      "path": "src/__tests__/.next/.bundlesize_",
-      "maxSize": "5.04KB"
-    },
-    {
-      "path": "src/__tests__/.next/.bundlesize__app",
+      "path": "/",
       "maxSize": "5.03KB"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize_-locale-_layout",
-      "maxSize": "5.03KB"
+      "path": "/_app",
+      "maxSize": "5.02KB"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize_-locale-_search",
-      "maxSize": "5.04KB"
+      "path": "/[locale]/layout",
+      "maxSize": "5.02KB"
+    },
+    {
+      "path": "/[locale]/search",
+      "maxSize": "5.03KB"
     }
   ]
 }"
 `;
 
-exports[`cli produces concatenated bundle file 1`] = `
-"// _app.js
-// index.js
-"
-`;
-
-exports[`cli produces config with correct files and sizes 1`] = `
+exports[`cli produces config with correct routes and sizes 1`] = `
 "{
   "files": [
     {
-      "path": "src/__tests__/.next/.bundlesize_",
-      "maxSize": "1 kB"
+      "path": "/",
+      "maxSize": "1 kB",
+      "size": "30B"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize__app",
-      "maxSize": "1 kB"
+      "path": "/_app",
+      "maxSize": "1 kB",
+      "size": "20B"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize_-locale-_layout",
-      "maxSize": "1 kB"
+      "path": "/[locale]/layout",
+      "maxSize": "1 kB",
+      "size": "25B"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize_-locale-_search",
-      "maxSize": "1 kB"
+      "path": "/[locale]/search",
+      "maxSize": "1 kB",
+      "size": "30B"
     }
   ]
 }"
@@ -56,20 +54,24 @@ exports[`cli uses the previous config if defined 1`] = `
 "{
   "files": [
     {
-      "path": "src/__tests__/.next/.bundlesize_",
-      "maxSize": "5.04KB"
+      "path": "/",
+      "maxSize": "150 kB",
+      "size": "30B"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize__app",
-      "maxSize": "5.03KB"
+      "path": "/_app",
+      "maxSize": "170 kB",
+      "size": "20B"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize_-locale-_layout",
-      "maxSize": "5.03KB"
+      "path": "/[locale]/layout",
+      "maxSize": "180 kB",
+      "size": "25B"
     },
     {
-      "path": "src/__tests__/.next/.bundlesize_-locale-_search",
-      "maxSize": "5.04KB"
+      "path": "/[locale]/search",
+      "maxSize": "1 kB",
+      "size": "30B"
     }
   ]
 }"
