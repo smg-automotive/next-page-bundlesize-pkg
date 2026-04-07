@@ -1,130 +1,63 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
 import fs from 'fs';
-import { execSync } from 'child_process';
+import bytes from 'bytes';
 
+import { BundleSizeReport, MeasuredBundleSize } from './types';
+import { extractArgs } from './extractArgs';
 import {
   getPreviousConfig,
   writeNewConfigFile,
 } from './externalConfigFileHandler';
+import { collectMeasuredBundleSizes } from './analyze';
 
-const { parse } = require('yargs');
-interface Args {
-  maxSize: string;
-  buildDir: string;
-  delta: string;
-  previousConfigFileName?: string;
-}
+const formatBytes = (value: number) => {
+  const formattedValue = bytes(value);
 
-interface Manifest {
-  pages: {
-    [pageName: string]: string[];
-  };
-  [key: string]: Record<string, string | string[]>;
-}
+  if (formattedValue === null) {
+    throw new Error(`Cannot format "${value}" as bytes`);
+  }
 
-export interface BundleSizeConfig {
-  files: Array<{
-    path: string;
-    maxSize: string;
-  }>;
-}
-
-const combineAppAndPageChunks = (manifest: Manifest, page: string) => {
-  const appPageChunks = manifest.pages['/_app'];
-  return Array.from(
-    new Set([...(appPageChunks ? appPageChunks : []), ...manifest.pages[page]]),
-  ).filter((chunk) => chunk.match(/\.js$/));
+  return formattedValue;
 };
 
-const concatenatePageBundles = ({
-  buildDir,
-  manifests,
-}: {
-  buildDir: string;
-  manifests: Manifest[];
-}): string[] => {
-  const pageBundles: string[] = [];
-  manifests.forEach((manifest) => {
-    Object.keys(manifest.pages).forEach((page) => {
-      const firstLoadChunks = combineAppAndPageChunks(manifest, page).map(
-        (chunk) => path.join(buildDir, chunk),
+const createBundleSizeReport = (
+  measuredBundleSizes: MeasuredBundleSize[],
+): BundleSizeReport => ({
+  files: measuredBundleSizes.map(
+    ({ path: bundlePath, maxSize, sizeInBytes }) => ({
+      path: bundlePath,
+      maxSize,
+      size: formatBytes(sizeInBytes),
+    }),
+  ),
+});
+
+const getFailingBundles = (measuredBundleSizes: MeasuredBundleSize[]) =>
+  measuredBundleSizes.filter((bundleSize) => {
+    const maxSizeInBytes = bytes(bundleSize.maxSize);
+
+    if (maxSizeInBytes === null) {
+      throw new Error(
+        `Route "${bundleSize.path}" has an invalid maxSize "${bundleSize.maxSize}"`,
       );
+    }
 
-      const outFile = path.join(
-        buildDir,
-        // eslint-disable-next-line sonarjs/single-char-in-character-classes
-        `.bundlesize${page.replace(/[/]/g, '_').replace(/[[\]]/g, '-')}`,
-      );
-
-      fs.writeFileSync(outFile, '');
-      firstLoadChunks.forEach((chunk) => {
-        const chunkContent = fs.readFileSync(chunk);
-        fs.appendFileSync(outFile, chunkContent);
-      });
-
-      pageBundles.push(outFile);
-    });
+    return bundleSize.sizeInBytes > maxSizeInBytes;
   });
 
-  return pageBundles;
-};
-
-const generateBundleSizeConfig = ({
-  pageBundles,
-  maxSize,
-  previousConfiguration,
-}: {
-  pageBundles: string[];
-  maxSize: string;
-  previousConfiguration: BundleSizeConfig;
-}): BundleSizeConfig => {
-  const previousConfigurationMap = new Map(
-    previousConfiguration.files.map((config) => [config.path, config.maxSize]),
-  );
-  return {
-    files: pageBundles.map((pageBundleName) => ({
-      path: pageBundleName,
-      maxSize: previousConfigurationMap.get(pageBundleName) || maxSize,
-    })),
-  };
-};
-
-const extractArgs = (args: string[]) => {
-  const parsedArgs = parse(args) as unknown as Args;
-  const maxSize = parsedArgs.maxSize || '200 kB';
-  const buildDir = parsedArgs.buildDir || '.next';
-  const delta = parsedArgs.delta || '5 kB';
-
-  return {
-    maxSize,
-    buildDir,
-    delta,
-    previousConfigFileName: parsedArgs.previousConfigFileName,
-  };
-};
-
-const loadFile = ({
-  buildDir,
-  fileName,
-}: {
-  buildDir: string;
-  fileName: string;
-}): Manifest => {
-  try {
-    const pathToLoad = path.join(buildDir, fileName);
-    return JSON.parse(fs.readFileSync(pathToLoad).toString());
-  } catch (err) {
-    const isFileNotExistingError =
-      err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT';
-
-    if (!isFileNotExistingError) {
-      // eslint-disable-next-line no-console
-      console.log(err);
-      process.exit(1);
-    }
-    return { pages: {} };
+const logFailingBundles = (failingBundles: MeasuredBundleSize[]) => {
+  if (failingBundles.length === 0) {
+    return;
   }
+
+  // eslint-disable-next-line no-console
+  console.log('Bundle size limit exceeded for:');
+  failingBundles.forEach((bundleSize) => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `  ${bundleSize.path}: ${formatBytes(bundleSize.sizeInBytes)} > ${bundleSize.maxSize}`,
+    );
+  });
 };
 
 export default function check(args: string[]) {
@@ -132,36 +65,32 @@ export default function check(args: string[]) {
     const { maxSize, buildDir, delta, previousConfigFileName } =
       extractArgs(args);
 
-    const manifests = [
-      // pages router build manifest
-      loadFile({ buildDir, fileName: 'build-manifest.json' }),
-      // app router build manifest
-      loadFile({ buildDir, fileName: 'app-build-manifest.json' }),
-    ];
-
-    const pageBundles = concatenatePageBundles({
-      buildDir,
-      manifests,
-    });
     const previousConfiguration = getPreviousConfig(
       buildDir,
       previousConfigFileName,
     );
-    const config = generateBundleSizeConfig({
-      pageBundles,
+    const measuredBundleSizes = collectMeasuredBundleSizes({
+      buildDir,
       maxSize,
       previousConfiguration,
     });
+    const config = createBundleSizeReport(measuredBundleSizes);
     const configFile = path.join(buildDir, 'next-page-bundlesize.config.json');
     fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
-    writeNewConfigFile(config, delta, maxSize, buildDir);
+    writeNewConfigFile(measuredBundleSizes, delta, maxSize, buildDir);
 
-    // eslint-disable-next-line sonarjs/os-command
-    execSync(`npx bundlesize2 --config=${configFile}`, { stdio: 'inherit' });
+    const failingBundles = getFailingBundles(measuredBundleSizes);
+    logFailingBundles(failingBundles);
+
+    if (failingBundles.length > 0) {
+      process.exit(1);
+      return;
+    }
   } catch (err) {
     // eslint-disable-next-line no-console
     console.log(err);
     process.exit(1);
+    return;
   }
 
   process.exit(0);

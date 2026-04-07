@@ -1,21 +1,28 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
-import { gzipSizeSync } from 'gzip-size';
 import fs from 'fs';
+import bytes from 'bytes';
 
-import { BundleSizeConfig } from './check';
+import { BundleSizeConfig, MeasuredBundleSize } from './types';
 
-const bytes = require('bytes');
+const formatBytes = (value: number) => {
+  const formattedValue = bytes(value);
+
+  if (formattedValue === null) {
+    throw new Error(`Cannot format "${value}" as bytes`);
+  }
+
+  return formattedValue;
+};
 
 export const writeNewConfigFile = (
-  oldConfig: BundleSizeConfig,
+  measuredBundleSizes: MeasuredBundleSize[],
   delta: string,
   maxSize: string,
   buildDir: string,
 ) => {
   try {
     const newConfig = updateConfigurationWithNewBundleSizes(
-      oldConfig,
+      measuredBundleSizes,
       delta,
       maxSize,
     );
@@ -52,23 +59,27 @@ export const getPreviousConfig = (
 };
 
 const updateConfigurationWithNewBundleSizes = (
-  config: BundleSizeConfig,
+  measuredBundleSizes: MeasuredBundleSize[],
   delta: string,
   maxSize: string,
 ): BundleSizeConfig => {
   let totalBundleSize = 0;
-  const newConfig = config.files.map((file) => {
-    const sizeInBytes = gzipSizeSync(fs.readFileSync(file.path, 'utf8'));
-    const deltaInBytes = bytes(delta);
-    const maxSizeInBytes = bytes(maxSize);
-    totalBundleSize += sizeInBytes;
+  const deltaInBytes = bytes(delta);
+  const maxSizeInBytes = bytes(maxSize);
+
+  if (deltaInBytes === null || maxSizeInBytes === null) {
+    throw new Error('delta or maxSize has an invalid byte format');
+  }
+
+  const newConfig = measuredBundleSizes.map((file) => {
+    totalBundleSize += file.sizeInBytes;
 
     return {
       path: file.path,
-      maxSize: bytes(
-        sizeInBytes < maxSizeInBytes
-          ? sizeInBytes + deltaInBytes
-          : sizeInBytes + 500, // magic number 500 is to prevent failing if it's exactly the same size
+      maxSize: formatBytes(
+        file.sizeInBytes < maxSizeInBytes
+          ? file.sizeInBytes + deltaInBytes
+          : file.sizeInBytes + 500,
       ),
     };
   });

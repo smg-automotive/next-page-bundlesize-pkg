@@ -9,9 +9,13 @@
 ## Usage
 ```
 npm install @smg-automotive/next-page-bundlesize -D
-next build
+next experimental-analyze --output .next/diagnostics/analyze
 npx next-page-bundlesize --maxSize="150 kB" --buildDir=.next
 ```
+
+The package reads route data from `.next/diagnostics/analyze/data` and compares
+the compressed client JavaScript size for each route against the configured
+limit.
 
 ### Arguments
 |                 Argument | Description                                                                                                                                                                                                                                                                                                                      | Default value |
