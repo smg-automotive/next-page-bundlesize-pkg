@@ -33,7 +33,7 @@ const createBuildDir = () => {
   fs.writeFileSync(
     path.join(analyzeDataDir, 'routes.json'),
     JSON.stringify(
-      ['/[locale]', '/[locale]/search', '/api/health', '/_not-found'],
+      ['/[locale]', '/[locale]/search', '/api', '/api/health', '/_not-found'],
       null,
       2,
     ),
@@ -79,6 +79,11 @@ const createBuildDir = () => {
     chunk_parts: [{ output_file_index: 0, compressed_size: 999 }],
   });
 
+  writeAnalyzeData(path.join(analyzeDataDir, 'api', 'analyze.data'), {
+    output_files: [{ filename: '[client-fs]/_next/static/chunks/api-root.js' }],
+    chunk_parts: [{ output_file_index: 0, compressed_size: 888 }],
+  });
+
   writeAnalyzeData(path.join(analyzeDataDir, '_not-found', 'analyze.data'), {
     output_files: [
       { filename: '[client-fs]/_next/static/chunks/not-found.js' },
@@ -112,6 +117,7 @@ const createBuildDir = () => {
 describe('cli', () => {
   let buildDir: string;
   const mockExit = jest.spyOn(process, 'exit').mockImplementation();
+  const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
 
   beforeEach(() => {
     jest.resetModules();
@@ -234,5 +240,28 @@ describe('cli', () => {
         },
       ],
     });
+  });
+
+  it('shows an actionable error when analyzer output is missing', () => {
+    fs.rmSync(
+      path.join(buildDir, 'diagnostics', 'analyze', 'data', 'routes.json'),
+    );
+
+    check([
+      'jest',
+      './node_modules/.bin/jest',
+      '--maxSize',
+      '1 kB',
+      '--buildDir',
+      buildDir,
+    ]);
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('Analyzer output not found at'),
+    );
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('next experimental-analyze --output'),
+    );
+    expect(mockExit).toHaveBeenCalledWith(1);
   });
 });

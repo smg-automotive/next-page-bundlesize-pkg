@@ -24,7 +24,13 @@ const isClientJavaScriptChunk = (filename: string) =>
   filename.startsWith(clientChunkPrefix) && filename.endsWith('.js');
 
 const isComparableRoute = (route: string) =>
-  !route.startsWith('/api/') && !route.startsWith('/_');
+  route !== '/api' && !route.startsWith('/api/') && !route.startsWith('/_');
+
+const hasErrorCode = (error: unknown, code: string) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  error.code === code;
 
 const getAnalyzeDataPathCandidates = (dataDir: string, route: string) => {
   const normalizedRoute = route.replace(/^\/+/, '');
@@ -114,10 +120,22 @@ export const collectMeasuredBundleSizes = ({
   maxSize: string;
   previousConfiguration: BundleSizeConfig;
 }): MeasuredBundleSize[] => {
-  const analyzeDataDir = path.join(buildDir, 'diagnostics', 'analyze', 'data');
-  const routes = JSON.parse(
-    fs.readFileSync(path.join(analyzeDataDir, 'routes.json'), 'utf8'),
-  ) as unknown;
+  const analyzeOutputDir = path.join(buildDir, 'diagnostics', 'analyze');
+  const analyzeDataDir = path.join(analyzeOutputDir, 'data');
+  const routesPath = path.join(analyzeDataDir, 'routes.json');
+  let routes: unknown;
+
+  try {
+    routes = JSON.parse(fs.readFileSync(routesPath, 'utf8')) as unknown;
+  } catch (error) {
+    if (hasErrorCode(error, 'ENOENT')) {
+      throw new Error(
+        `Analyzer output not found at "${routesPath}". Run 'next experimental-analyze --output "${analyzeOutputDir}"' first and confirm --buildDir points at the correct ".next" directory.`,
+      );
+    }
+
+    throw error;
+  }
 
   if (!Array.isArray(routes)) {
     throw new Error('Analyzer routes.json is invalid');

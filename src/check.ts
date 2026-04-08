@@ -3,22 +3,13 @@ import fs from 'fs';
 import bytes from 'bytes';
 
 import { BundleSizeReport, MeasuredBundleSize } from './types';
+import { formatBytes } from './formatBytes';
 import { extractArgs } from './extractArgs';
 import {
   getPreviousConfig,
   writeNewConfigFile,
 } from './externalConfigFileHandler';
 import { collectMeasuredBundleSizes } from './analyze';
-
-const formatBytes = (value: number) => {
-  const formattedValue = bytes(value);
-
-  if (formattedValue === null) {
-    throw new Error(`Cannot format "${value}" as bytes`);
-  }
-
-  return formattedValue;
-};
 
 const createBundleSizeReport = (
   measuredBundleSizes: MeasuredBundleSize[],
@@ -88,7 +79,7 @@ export default function check(args: string[]) {
     }
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.log(err);
+    console.log(err instanceof Error ? err.message : String(err));
     process.exit(1);
     return;
   }

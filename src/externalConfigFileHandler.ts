@@ -3,16 +3,11 @@ import fs from 'fs';
 import bytes from 'bytes';
 
 import { BundleSizeConfig, MeasuredBundleSize } from './types';
+import { formatBytes } from './formatBytes';
 
-const formatBytes = (value: number) => {
-  const formattedValue = bytes(value);
-
-  if (formattedValue === null) {
-    throw new Error(`Cannot format "${value}" as bytes`);
-  }
-
-  return formattedValue;
-};
+// Keep a small buffer above already-oversized routes so the regenerated config
+// does not pin the limit to the exact current size.
+const exceededMaxSizeBufferInBytes = 500;
 
 export const writeNewConfigFile = (
   measuredBundleSizes: MeasuredBundleSize[],
@@ -79,7 +74,7 @@ const updateConfigurationWithNewBundleSizes = (
       maxSize: formatBytes(
         file.sizeInBytes < maxSizeInBytes
           ? file.sizeInBytes + deltaInBytes
-          : file.sizeInBytes + 500,
+          : file.sizeInBytes + exceededMaxSizeBufferInBytes,
       ),
     };
   });
