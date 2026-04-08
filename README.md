@@ -9,7 +9,7 @@
 ## Usage
 ```
 npm install @smg-automotive/next-page-bundlesize -D
-next experimental-analyze --output .next/diagnostics/analyze
+next experimental-analyze --output
 npx next-page-bundlesize --maxSize="150 kB" --buildDir=.next
 ```
 
