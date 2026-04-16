@@ -48,16 +48,8 @@ const getAnalyzeDataPathCandidates = (dataDir: string, route: string) => {
 const readAnalyzeData = (filePath: string): AnalyzeData => {
   const buffer = fs.readFileSync(filePath);
 
-  if (buffer.length < analyzeDataHeaderSize) {
-    throw new Error(`Analyzer file "${filePath}" is invalid`);
-  }
-
   const jsonLength = buffer.readUInt32BE(0);
   const jsonEnd = analyzeDataHeaderSize + jsonLength;
-
-  if (jsonEnd > buffer.length) {
-    throw new Error(`Analyzer file "${filePath}" is truncated`);
-  }
 
   const parsedData = JSON.parse(
     buffer.subarray(analyzeDataHeaderSize, jsonEnd).toString('utf8'),
