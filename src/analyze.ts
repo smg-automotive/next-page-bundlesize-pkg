@@ -24,7 +24,7 @@ const isClientJavaScriptChunk = (filename: string) =>
   filename.startsWith(clientChunkPrefix) && filename.endsWith('.js');
 
 const isComparableRoute = (route: string) =>
-  route !== '/api' && !route.startsWith('/api/') && !route.startsWith('/_');
+  route !== '/api' && !route.startsWith('/api/');
 
 const hasErrorCode = (error: unknown, code: string) =>
   typeof error === 'object' &&
