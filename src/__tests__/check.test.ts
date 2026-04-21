@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import check from '../check';
+import check from '@/src/check';
 
 const validRunConfig = [
   'jest',

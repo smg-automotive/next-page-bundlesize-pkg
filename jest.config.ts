@@ -3,6 +3,9 @@ export default {
   collectCoverage: false,
   errorOnDeprecated: true,
   moduleDirectories: ['node_modules', '<rootDir>'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
   preset: 'ts-jest',
   roots: ['<rootDir>/src'],
   testEnvironment: 'node',
