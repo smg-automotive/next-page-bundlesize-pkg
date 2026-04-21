@@ -52,6 +52,33 @@ exports[`cli produces config with correct files and sizes 1`] = `
 }"
 `;
 
+exports[`cli produces route-specific bundles for next 16 app routes 1`] = `
+"{
+  "files": [
+    {
+      "path": "src/__tests__/.next-next16/.bundlesize__not-found",
+      "maxSize": "1 kB"
+    },
+    {
+      "path": "src/__tests__/.next-next16/.bundlesize_-locale-",
+      "maxSize": "1 kB"
+    },
+    {
+      "path": "src/__tests__/.next-next16/.bundlesize_-locale-_product",
+      "maxSize": "1 kB"
+    }
+  ]
+}"
+`;
+
+exports[`cli produces route-specific bundles for next 16 app routes 2`] = `
+"// framework.js
+// main-app.js
+// shared-layout.js
+// encoded-home-page.js
+"
+`;
+
 exports[`cli uses the previous config if defined 1`] = `
 "{
   "files": [
