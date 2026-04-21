@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"]
+    },
     "strict": true,
     "jsx": "react",
     "module": "esnext",
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "noUnusedParameters": true,
@@ -14,7 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "allowJs": true
+    "allowJs": true,
+    "types": ["jest", "node"]
   },
   "exclude": ["dist", "node_modules"],
   "include": ["src"]
