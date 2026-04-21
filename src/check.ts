@@ -137,6 +137,8 @@ export default function check(args: string[]) {
       loadFile({ buildDir, fileName: 'build-manifest.json' }),
       // app router build manifest
       loadFile({ buildDir, fileName: 'app-build-manifest.json' }),
+      // next version 16
+      loadFile({ buildDir, fileName: 'app-path-routes-manifest.json' }),
     ];
 
     const pageBundles = concatenatePageBundles({
