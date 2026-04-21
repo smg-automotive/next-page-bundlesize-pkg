@@ -85,11 +85,13 @@ const collectClientReferenceChunks = (
     ),
   );
 
+const normalizeChunkPath = (chunk: string) => chunk.replace(/^\/?_next\//, '');
+
 const chunkFilePath = (buildDir: string, chunk: string) => {
   try {
-    return path.join(buildDir, decodeURIComponent(chunk));
+    return path.join(buildDir, decodeURIComponent(normalizeChunkPath(chunk)));
   } catch {
-    return path.join(buildDir, chunk);
+    return path.join(buildDir, normalizeChunkPath(chunk));
   }
 };
 
