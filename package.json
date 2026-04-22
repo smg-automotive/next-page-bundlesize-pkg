@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "bundlesize2": "0.0.35",
-    "globals": "17.4.0",
+    "globals": "17.5.0",
     "gzip-size": "7.0.0",
     "yargs": "17.7.2"
   }
