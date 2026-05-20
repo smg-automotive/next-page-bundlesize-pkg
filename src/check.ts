@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import vm from 'vm';
 import path from 'path';
 import fs from 'fs';
@@ -153,6 +152,8 @@ const loadClientReferenceManifest = ({
       };
     } = { globalThis: {} };
 
+    // Next.js writes this manifest as a JS assignment, not JSON.
+    // eslint-disable-next-line sonarjs/code-eval
     vm.runInNewContext(fileContents, sandbox, { timeout: 1000 });
 
     return Object.values(sandbox.globalThis.__RSC_MANIFEST || {})[0] || {};

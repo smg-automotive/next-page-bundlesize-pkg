@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import path from 'path';
 import { gzipSizeSync } from 'gzip-size';
 import fs from 'fs';
