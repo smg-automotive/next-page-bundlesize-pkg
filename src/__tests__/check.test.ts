@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import check from '../check';
+import check from '@/src/check';
 
 const validRunConfig = [
   'jest',
@@ -9,7 +9,6 @@ const validRunConfig = [
   '--maxSize',
   '1 kB',
   '--buildDir',
-  './src/__tests__/.next',
 ];
 
 describe('cli', () => {
@@ -23,7 +22,7 @@ describe('cli', () => {
   });
 
   it('produces config with correct files and sizes', () => {
-    check(validRunConfig);
+    check(validRunConfig.concat('./src/__tests__/.next'));
 
     const config = fs
       .readFileSync('./src/__tests__/.next/next-page-bundlesize.config.json')
@@ -33,7 +32,7 @@ describe('cli', () => {
   });
 
   it('produces concatenated bundle file', () => {
-    check(validRunConfig);
+    check(validRunConfig.concat('./src/__tests__/.next'));
 
     const page = fs
       .readFileSync('./src/__tests__/.next/.bundlesize_')
@@ -56,7 +55,7 @@ describe('cli', () => {
 
   it('uses the previous config if defined', () => {
     check([
-      ...validRunConfig,
+      ...validRunConfig.concat('./src/__tests__/.next'),
       '--previousConfigFileName',
       'master-config.json',
     ]);
@@ -69,7 +68,7 @@ describe('cli', () => {
 
   it('adds a delta to the new config if smaller than maxSize', () => {
     check([
-      ...validRunConfig,
+      ...validRunConfig.concat('./src/__tests__/.next'),
       '--previousConfigFileName',
       'master-config.json',
       '--delta',
@@ -80,5 +79,26 @@ describe('cli', () => {
       .readFileSync('./src/__tests__/.next/bundlesize.json')
       .toString();
     expect(updatedConfig).toMatchSnapshot();
+  });
+
+  it('produces route-specific bundles for next 16 app routes', () => {
+    check(validRunConfig.concat('./src/__tests__/.next-next16'));
+
+    const config = fs
+      .readFileSync(
+        './src/__tests__/.next-next16/next-page-bundlesize.config.json',
+      )
+      .toString();
+    expect(config).toMatchSnapshot();
+
+    const homePageBundle = fs
+      .readFileSync('./src/__tests__/.next-next16/.bundlesize_-locale-')
+      .toString();
+    expect(homePageBundle).toMatchSnapshot();
+
+    expect(
+      fs.existsSync('./src/__tests__/.next-next16/.bundlesize__api_ready'),
+    ).toBe(false);
+    expect(mockExit).toHaveBeenCalledWith(0);
   });
 });
