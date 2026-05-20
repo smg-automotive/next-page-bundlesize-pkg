@@ -1,5 +1,9 @@
 
 # next-page-bundlesize-pkg
+
+> [!IMPORTANT]
+> This project is being migrated into [smg-automotive/automotive-web](https://github.com/smg-automotive/automotive-web/). Please check the monorepo before starting new work in this repository.
+
 ## Page-level bundle size check for next.js
 
 
