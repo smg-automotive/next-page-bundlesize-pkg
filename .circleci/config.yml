@@ -126,23 +126,3 @@ workflows:
           <<: *SLACK_NOTIFICATION_CONTEXT
           requires:
             - install
-      - pre_release:
-          <<: *NPM_PUBLISHING_CONTEXT
-          requires:
-            - lint
-            - unit
-            - typecheck
-            - build
-          filters:
-            branches:
-              ignore: main
-      - release:
-          <<: *NPM_PUBLISHING_CONTEXT
-          requires:
-            - lint
-            - unit
-            - typecheck
-            - build
-          filters:
-            branches:
-              only: main
